@@ -8,7 +8,7 @@ Author URI: https://lqd.jp/wp/
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: liquid-speech-balloon
-Version: 1.2.4
+Version: 1.2.5
 */
 /*  Copyright 2019 LIQUID DESIGN Ltd. (email : info@lqd.jp)
 
@@ -33,6 +33,13 @@ function liquid_speech_balloon_init() {
 }
 add_action( 'init', 'liquid_speech_balloon_init' );
 
+// api
+if ( is_admin() ) {
+    $liquid_speech_balloon_api = require_once 'inc/api.php';
+    $liquid_speech_balloon_json = $liquid_speech_balloon_api('https://lqd.jp/wp/data/p/liquid-speech-balloon.json', 'liquid_speech_balloon_json');
+}
+
+// plugin_action_links_
 function liquid_speech_balloon_plugin_action_links( $links ) {
 	$mylinks = '<a href="'.admin_url( 'options-general.php?page=liquid-speech-balloon' ).'">'.__( 'Settings', 'liquid-speech-balloon' ).'</a>';
     array_unshift( $links, $mylinks);
@@ -143,7 +150,7 @@ add_action( 'admin_menu', 'liquid_speech_balloon_admin' );
 
 // admin_page
 function liquid_speech_balloon_admin_page() {
-    global $json_liquid_speech_balloon, $liquid_speech_balloon, $liquid_speech_balloon_img, $liquid_speech_balloon_name, $liquid_speech_balloon_note;
+    global $liquid_speech_balloon_json, $liquid_speech_balloon, $liquid_speech_balloon_img, $liquid_speech_balloon_name, $liquid_speech_balloon_note;
 
     // POST
     if( $_POST && check_admin_referer( 'liquid_speech_balloon_nonce_action', 'liquid_speech_balloon_nonce_field' ) ){
@@ -201,10 +208,10 @@ function liquid_speech_balloon_admin_page() {
 <div id="poststuff">
 
 <!-- Recommend -->
-<?php if( !empty($json_liquid_speech_balloon->recommend) ){ ?>
+<?php if( !empty($liquid_speech_balloon_json) && !empty($liquid_speech_balloon_json['recommend']) ){ ?>
 <div class="postbox">
 <h2 style="border-bottom: 1px solid #eee;"><?php _e( 'Recommend', 'liquid-speech-balloon' ); ?></h2>
-<div class="inside"><?php echo $json_liquid_speech_balloon->recommend; ?></div>
+<div class="inside"><?php echo $liquid_speech_balloon_json['recommend']; ?></div>
 </div>
 <?php } ?>
 
@@ -310,35 +317,22 @@ function btn_del(){
 </div><!-- /wrap -->
 <?php }
 
-// json
-if ( is_admin() ) {
-    $json_liquid_speech_balloon_error = "";
-    $json_liquid_speech_balloon_url = "https://lqd.jp/wp/data/p/liquid-speech-balloon.json";
-    $json_liquid_speech_balloon = wp_remote_get($json_liquid_speech_balloon_url);
-    if ( is_wp_error( $json_liquid_speech_balloon ) ) {
-        $json_liquid_speech_balloon_error = $json_liquid_speech_balloon->get_error_message().$json_liquid_speech_balloon_url;
-    }else{
-        $json_liquid_speech_balloon = json_decode($json_liquid_speech_balloon['body']);
-    }
-}
-
 // notices
 function liquid_speech_balloon_admin_notices() {
-    global $json_liquid_speech_balloon, $json_liquid_speech_balloon_error;
-    if ( isset( $_GET['liquid_admin_notices_dismissed'] ) ) {
-        set_transient( 'liquid_admin_notices', 'dismissed', 60*60*24*30 );
-    }
-    if ( isset( $_GET['liquid_admin_offer_dismissed'] ) ) {
-        set_transient( 'liquid_admin_offer', 'dismissed', 60*60*24*30 );
-    }
-    if( !empty($json_liquid_speech_balloon->news) && get_transient( 'liquid_admin_notices' ) != 'dismissed' ){
-        echo '<div class="notice notice-info" style="position: relative;"><p>'.$json_liquid_speech_balloon->news.'</p><a href="?liquid_admin_notices_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
-    }
-    if( !empty($json_liquid_speech_balloon->offer) && get_transient( 'liquid_admin_offer' ) != 'dismissed' ){
-        echo '<div class="notice notice-info" style="position: relative;"><p>'.$json_liquid_speech_balloon->offer.'</p><a href="?liquid_admin_offer_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
-    }
-    if(!empty($json_liquid_speech_balloon_error)) {
-        echo '<script>console.log("'.$json_liquid_speech_balloon_error.'");</script>';
+    global $liquid_speech_balloon_json;
+    if( !empty($liquid_speech_balloon_json) ) {
+        if ( isset( $_GET['liquid_admin_notices_dismissed'] ) ) {
+            set_transient( 'liquid_admin_notices', 'dismissed', 60*60*24*30 );
+        }
+        if ( isset( $_GET['liquid_admin_offer_dismissed'] ) ) {
+            set_transient( 'liquid_admin_offer', 'dismissed', 60*60*24*30 );
+        }
+        if( !empty($liquid_speech_balloon_json['news']) && get_transient( 'liquid_admin_notices' ) != 'dismissed' ){
+            echo '<div class="notice notice-info" style="position: relative;"><p>'.$liquid_speech_balloon_json['news'].'</p><a href="?liquid_admin_notices_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
+        }
+        if( !empty($liquid_speech_balloon_json['offer']) && get_transient( 'liquid_admin_offer' ) != 'dismissed' ){
+            echo '<div class="notice notice-info" style="position: relative;"><p>'.$liquid_speech_balloon_json['offer'].'</p><a href="?liquid_admin_offer_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
+        }
     }
 }
 add_action( 'admin_notices', 'liquid_speech_balloon_admin_notices' );
