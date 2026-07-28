@@ -8,7 +8,7 @@ Author URI: https://lqd.jp/wp/
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: liquid-speech-balloon
-Version: 1.2.5
+Version: 1.2.6
 */
 /*  Copyright 2019 LIQUID DESIGN Ltd. (email : info@lqd.jp)
 
@@ -64,13 +64,11 @@ if( empty( $liquid_speech_balloon ) ){
 
 function liquid_speech_balloon_editor_assets() {
     global $liquid_speech_balloon_name, $liquid_speech_balloon_note;
-    // enqueue
-    wp_enqueue_script( 'liquid-block-speech', plugins_url( 'lib/block.js', __FILE__ ), array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-editor' ));
+    // enqueue（wp-editor 依存は新ウィジェットエディターで Notice が出るため wp-block-editor を使う）
+    wp_enqueue_script( 'liquid-block-speech', plugins_url( 'lib/block.js', __FILE__ ), array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-block-editor' ));
     wp_enqueue_style( 'liquid-block-speech', plugins_url( 'css/block.css', __FILE__ ), array() );
     // inline
     wp_add_inline_style( 'liquid-block-speech', liquid_speech_balloon_style_data() );
-    // register
-    wp_register_script( 'liquid-block-speech', plugins_url( 'lib/block.js', __FILE__ ), array( 'wp-i18n' ) );
     // translations
     if ( function_exists( 'wp_set_script_translations' ) ) {
         wp_set_script_translations( 'liquid-block-speech', 'liquid-speech-balloon', plugin_dir_path( __FILE__ ) . 'languages' );
@@ -322,10 +320,10 @@ function liquid_speech_balloon_admin_notices() {
     global $liquid_speech_balloon_json;
     if( !empty($liquid_speech_balloon_json) ) {
         if ( isset( $_GET['liquid_admin_notices_dismissed'] ) ) {
-            set_transient( 'liquid_admin_notices', 'dismissed', 60*60*24*30 );
+            set_transient( 'liquid_admin_notices', 'dismissed', 60*60*24*180 );
         }
         if ( isset( $_GET['liquid_admin_offer_dismissed'] ) ) {
-            set_transient( 'liquid_admin_offer', 'dismissed', 60*60*24*30 );
+            set_transient( 'liquid_admin_offer', 'dismissed', 60*60*24*180 );
         }
         if( !empty($liquid_speech_balloon_json['news']) && get_transient( 'liquid_admin_notices' ) != 'dismissed' ){
             echo '<div class="notice notice-info" style="position: relative;"><p>'.$liquid_speech_balloon_json['news'].'</p><a href="?liquid_admin_notices_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';

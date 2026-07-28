@@ -6,12 +6,13 @@ var __ = wp.i18n.__;
 var _wp$components = wp.components,
     PanelBody = _wp$components.PanelBody,
     SelectControl = _wp$components.SelectControl;
-var _wp$editor = wp.editor,
-    RichText = _wp$editor.RichText,
-    BlockControls = _wp$editor.BlockControls,
-    AlignmentToolbar = _wp$editor.AlignmentToolbar,
-    InspectorControls = _wp$editor.InspectorControls,
-    PanelColorSettings = _wp$editor.PanelColorSettings;
+// WP 5.2 以降は wp.blockEditor に移設済み（旧環境は wp.editor にフォールバック）
+var _wp$blockEditor = wp.blockEditor || wp.editor,
+    RichText = _wp$blockEditor.RichText,
+    BlockControls = _wp$blockEditor.BlockControls,
+    AlignmentToolbar = _wp$blockEditor.AlignmentToolbar,
+    InspectorControls = _wp$blockEditor.InspectorControls,
+    PanelColorSettings = _wp$blockEditor.PanelColorSettings;
 
 
 registerBlockType('liquid/speech-balloon', {
