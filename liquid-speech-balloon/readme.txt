@@ -3,8 +3,8 @@ Contributors: lqd
 Donate link: https://lqd.jp/wp/plugin.html
 Tags: gutenberg, blocks, speech, speak, conversation
 Requires at least: 5.0.0
-Tested up to: 7.0.2
-Stable tag: 1.2.6
+Tested up to: 7.1
+Stable tag: 1.2.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,10 @@ A: Try More options > Attempt Block Recovery.
 3. Settings.
 
 == Changelog ==
+
+= 1.2.7 =
+
+* Support the iframed block editor (WP 7.1) and update the block to API version 3.
 
 = 1.2.4 =
 

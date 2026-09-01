@@ -8,7 +8,7 @@ Author URI: https://lqd.jp/wp/
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: liquid-speech-balloon
-Version: 1.2.6
+Version: 1.2.7
 */
 /*  Copyright 2019 LIQUID DESIGN Ltd. (email : info@lqd.jp)
 
@@ -58,6 +58,11 @@ if( empty( $liquid_speech_balloon ) ){
     add_action( 'enqueue_block_editor_assets', 'liquid_speech_balloon_editor_assets' );
     add_action( 'enqueue_block_assets', function () {
         wp_enqueue_style( 'liquid-block-speech', plugins_url( 'css/block.css' , __FILE__ ), array() );
+        // エディター（iframe キャンバス内を含む）にもアバター画像等のインライン CSS を届かせる。
+        // enqueue_block_editor_assets は親ドキュメント専用で iframe 内に反映されないため、ここで追加する
+        if ( is_admin() ) {
+            wp_add_inline_style( 'liquid-block-speech', liquid_speech_balloon_style_data() );
+        }
     });
     add_action( 'wp_head', 'liquid_speech_balloon_style' );
 }
@@ -67,8 +72,7 @@ function liquid_speech_balloon_editor_assets() {
     // enqueue（wp-editor 依存は新ウィジェットエディターで Notice が出るため wp-block-editor を使う）
     wp_enqueue_script( 'liquid-block-speech', plugins_url( 'lib/block.js', __FILE__ ), array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-block-editor' ));
     wp_enqueue_style( 'liquid-block-speech', plugins_url( 'css/block.css', __FILE__ ), array() );
-    // inline
-    wp_add_inline_style( 'liquid-block-speech', liquid_speech_balloon_style_data() );
+    // inline CSS は enqueue_block_assets 側で追加する（iframe 内対応・二重追加防止）
     // translations
     if ( function_exists( 'wp_set_script_translations' ) ) {
         wp_set_script_translations( 'liquid-block-speech', 'liquid-speech-balloon', plugin_dir_path( __FILE__ ) . 'languages' );
@@ -99,7 +103,7 @@ function liquid_speech_balloon_style_data() {
         $i=0;
         foreach ( $liquid_speech_balloon_img as $key => $value ) {
             if( !empty( $value ) ){
-                $data.= '.liquid-speech-balloon-'.$key.' .liquid-speech-balloon-avatar { background-image: url("'.esc_html($value).'"); } ';
+                $data.= '.liquid-speech-balloon-'.$key.' .liquid-speech-balloon-avatar { background-image: url("'.esc_url($value).'"); } ';
             }
             $i++;
         }
@@ -145,6 +149,14 @@ function liquid_speech_balloon_admin() {
     );
 }
 add_action( 'admin_menu', 'liquid_speech_balloon_admin' );
+
+// 設定ページでメディアライブラリ（wp.media）を使えるようにする
+function liquid_speech_balloon_admin_media( $hook ) {
+    if ( 'settings_page_liquid-speech-balloon' === $hook ) {
+        wp_enqueue_media();
+    }
+}
+add_action( 'admin_enqueue_scripts', 'liquid_speech_balloon_admin_media' );
 
 // admin_page
 function liquid_speech_balloon_admin_page() {
@@ -209,7 +221,7 @@ function liquid_speech_balloon_admin_page() {
 <?php if( !empty($liquid_speech_balloon_json) && !empty($liquid_speech_balloon_json['recommend']) ){ ?>
 <div class="postbox">
 <h2 style="border-bottom: 1px solid #eee;"><?php _e( 'Recommend', 'liquid-speech-balloon' ); ?></h2>
-<div class="inside"><?php echo $liquid_speech_balloon_json['recommend']; ?></div>
+<div class="inside"><?php echo wp_kses_post( $liquid_speech_balloon_json['recommend'] ); ?></div>
 </div>
 <?php } ?>
 
@@ -226,7 +238,7 @@ function liquid_speech_balloon_admin_page() {
 <table class="form-table">
     <tbody>
     <tr>
-        <th><?php _e( 'Enable', 'liquid-speech-balloon' ); ?></th>
+        <th style="width:5em"><?php _e( 'Enable', 'liquid-speech-balloon' ); ?></th>
         <td scope="row" colspan="3">
             <label for="liquid_speech_balloon_on"><input type="radio" id="liquid_speech_balloon_on" name="liquid_speech_balloon" value="0" <?php echo $checked_on; ?>>On</label>
             <label for="liquid_speech_balloon_off"><input type="radio" id="liquid_speech_balloon_off" name="liquid_speech_balloon" value="1" <?php echo $checked_off; ?>>Off</label>
@@ -236,7 +248,7 @@ function liquid_speech_balloon_admin_page() {
         <th scope="row" colspan="4"><?php _e( 'Avatar', 'liquid-speech-balloon' ); ?> [<a href="https://lqd.jp/wp/plugin/speech-balloon.html?utm_source=admin&utm_medium=plugin&utm_campaign=balloon" target="_blank"><?php _e( 'How to use', 'liquid-speech-balloon' ); ?></a>]</th>
     </tr>
     <tr>
-        <td style="padding:2px">
+        <td style="padding:2px; width:5em">
             <strong><label><?php _e( 'No.', 'liquid-speech-balloon' ); ?></label></strong>
         </td>
         <td style="padding:2px">
@@ -262,19 +274,19 @@ function liquid_speech_balloon_admin_page() {
         } else {
             echo '<tr><td style="padding:2px"><p>'.__( 'Default', 'liquid-speech-balloon' ).'</p></td>';
         }
-        echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_name['.$j.']" value="'.esc_html($name).'"></p></td>';
-        echo '<td style="padding:2px"><p><input class="widefat" style="width:84%" type="url" name="liquid_speech_balloon_img['.$j.']" value="'.esc_html($img).'"> <img src="'.esc_html($img).'" alt="" style="width:22px; vertical-align:sub;"></p></td>';
+        echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_name['.$j.']" value="'.esc_attr($name).'"></p></td>';
+        echo '<td style="padding:2px"><p><input class="widefat" style="width:70%" type="url" name="liquid_speech_balloon_img['.$j.']" value="'.esc_url($img).'"> <button type="button" class="button lsb-media-btn" style="line-height:1">'.esc_html__( 'Select', 'liquid-speech-balloon' ).'</button> <img src="'.esc_url($img).'" alt="" style="width:22px; vertical-align:sub;"></p></td>';
         if( $i!=0 ) {
-            echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_note['.$j.']" value="'.esc_html($note).'"></p></td>';
+            echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_note['.$j.']" value="'.esc_attr($note).'"></p></td>';
         } else {
-            echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_note['.$j.']" value="'.esc_html($note).'"></p></td>';
+            echo '<td style="padding:2px"><p><input class="widefat" type="text" name="liquid_speech_balloon_note['.$j.']" value="'.esc_attr($note).'"></p></td>';
         }
         echo '</tr>';
     }
     $j++;
     echo '<tr><td style="padding:2px"><p id="btn_add" class="button">'.__( 'Add', 'liquid-speech-balloon' ).'</p></td>';
     echo '<td style="padding:2px;visibility:hidden;" class="hides"><p><input class="widefat dises" type="text" name="liquid_speech_balloon_name['.$j.']" value="" disabled></p></td>';
-    echo '<td style="padding:2px;visibility:hidden;" class="hides"><p><input class="widefat dises" style="width:84%" type="url" name="liquid_speech_balloon_img['.$j.']" value="" disabled></p></td>';
+    echo '<td style="padding:2px;visibility:hidden;" class="hides"><p><input class="widefat dises" style="width:70%" type="url" name="liquid_speech_balloon_img['.$j.']" value="" disabled> <button type="button" class="button lsb-media-btn" style="line-height:1">'.esc_html__( 'Select', 'liquid-speech-balloon' ).'</button></p></td>';
     echo '<td style="padding:2px;visibility:hidden;" class="hides"><p><input class="widefat dises" type="text" name="liquid_speech_balloon_note['.$j.']" value="" disabled></p></td>';
     echo '</tr>';
 ?>
@@ -286,6 +298,30 @@ function liquid_speech_balloon_admin_page() {
 <p id="btn_del"><input type="checkbox" name="delete" value="" id="btn_del_check" onclick="btn_del();"> <?php _e( 'Delete All', 'liquid-speech-balloon' ); ?></p>
 <?php submit_button(); ?>
 <script>
+// media select
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.lsb-media-btn');
+    if (!btn || typeof wp === 'undefined' || !wp.media) {
+        return;
+    }
+    e.preventDefault();
+    var input = btn.parentNode.querySelector('input[type="url"]');
+    var frame = wp.media({
+        title: '<?php echo esc_js( __( 'Select Image', 'liquid-speech-balloon' ) ); ?>',
+        library: { type: 'image' },
+        multiple: false
+    });
+    frame.on('select', function () {
+        var att = frame.state().get('selection').first().toJSON();
+        var url = (att.sizes && att.sizes.thumbnail) ? att.sizes.thumbnail.url : att.url;
+        input.value = url;
+        var img = btn.parentNode.querySelector('img');
+        if (img) {
+            img.src = url;
+        }
+    });
+    frame.open();
+});
 // add
 document.getElementById("btn_add").onclick = function onclick(event) {
     this.classList.remove("button");
@@ -326,10 +362,10 @@ function liquid_speech_balloon_admin_notices() {
             set_transient( 'liquid_admin_offer', 'dismissed', 60*60*24*180 );
         }
         if( !empty($liquid_speech_balloon_json['news']) && get_transient( 'liquid_admin_notices' ) != 'dismissed' ){
-            echo '<div class="notice notice-info" style="position: relative;"><p>'.$liquid_speech_balloon_json['news'].'</p><a href="?liquid_admin_notices_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
+            echo '<div class="notice notice-info" style="position: relative;"><p>'.wp_kses_post($liquid_speech_balloon_json['news']).'</p><a href="?liquid_admin_notices_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
         }
         if( !empty($liquid_speech_balloon_json['offer']) && get_transient( 'liquid_admin_offer' ) != 'dismissed' ){
-            echo '<div class="notice notice-info" style="position: relative;"><p>'.$liquid_speech_balloon_json['offer'].'</p><a href="?liquid_admin_offer_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
+            echo '<div class="notice notice-info" style="position: relative;"><p>'.wp_kses_post($liquid_speech_balloon_json['offer']).'</p><a href="?liquid_admin_offer_dismissed" style="position: absolute; right: 10px; top: 10px;">&times;</a></div>';
         }
     }
 }

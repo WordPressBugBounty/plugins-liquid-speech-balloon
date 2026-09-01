@@ -237,3 +237,9 @@ msgstr ""
 #: liquid-speech-balloon.php:289
 msgid "Delete All"
 msgstr ""
+
+msgid "Select"
+msgstr ""
+
+msgid "Select Image"
+msgstr ""

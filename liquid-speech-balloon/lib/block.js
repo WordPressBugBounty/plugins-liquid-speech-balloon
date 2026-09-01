@@ -12,10 +12,12 @@ var _wp$blockEditor = wp.blockEditor || wp.editor,
     BlockControls = _wp$blockEditor.BlockControls,
     AlignmentToolbar = _wp$blockEditor.AlignmentToolbar,
     InspectorControls = _wp$blockEditor.InspectorControls,
-    PanelColorSettings = _wp$blockEditor.PanelColorSettings;
+    PanelColorSettings = _wp$blockEditor.PanelColorSettings,
+    useBlockProps = _wp$blockEditor.useBlockProps;
 
 
 registerBlockType('liquid/speech-balloon', {
+    apiVersion: 3,
     title: __('Speech Balloon', 'liquid-speech-balloon'),
     icon: 'admin-comments',
     description: __('Talk style design. Speech bubble'),
@@ -255,7 +257,7 @@ registerBlockType('liquid/speech-balloon', {
             ),
             React.createElement(
                 'div',
-                { className: 'liquid-speech-balloon-wrap' + ' ' + avatar + ' ' + direction + ' ' + design + ' ' + size + ' ' + option },
+                useBlockProps({ className: 'liquid-speech-balloon-wrap' + ' ' + avatar + ' ' + direction + ' ' + design + ' ' + size + ' ' + option }),
                 React.createElement('div', { className: 'liquid-speech-balloon-avatar' }),
                 React.createElement(
                     'div',
@@ -302,7 +304,7 @@ registerBlockType('liquid/speech-balloon', {
 
         return React.createElement(
             'div',
-            { className: 'liquid-speech-balloon-wrap' + ' ' + avatar + ' ' + direction + ' ' + design + ' ' + size + ' ' + option },
+            useBlockProps.save({ className: 'liquid-speech-balloon-wrap' + ' ' + avatar + ' ' + direction + ' ' + design + ' ' + size + ' ' + option }),
             React.createElement('div', { className: 'liquid-speech-balloon-avatar' }),
             React.createElement(
                 'div',
